@@ -34,11 +34,15 @@ function onSearch(e) {
 
   // Новый запрос
   pageNow = 1;
+
   fetchImage(inputValue, pageNow)
     .then(fetchData => {
       const { hits: arr, totalHits } = fetchData.data;
 
       if (arr.length === 0) {
+        observer.unobserve(guard);
+
+        refs.gallery.innerHTML = '';
         Notiflix.Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
