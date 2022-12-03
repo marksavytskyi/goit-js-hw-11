@@ -8,13 +8,20 @@ import Notiflix from 'notiflix';
 const refs = {
   form: document.querySelector('#search-form'),
   gallery: document.querySelector('.gallery'),
-  loadMore: document.querySelector('.load-more'),
 };
 
 // ADD LISTENER
 refs.form.addEventListener('submit', onSearch);
-refs.loadMore.addEventListener('click', onLoadMorePictures);
 let gallery = new SimpleLightbox('.gallery a');
+
+const guard = document.querySelector('.js-guard');
+let options = {
+  root: null,
+  rootMargin: '100px',
+  threshold: 1.0,
+};
+
+let observer = new IntersectionObserver(onLoad, options);
 
 // COUNTERS
 let pageNow = 1;
@@ -25,17 +32,11 @@ function onSearch(e) {
 
   let inputValue = e.target.elements.searchQuery.value;
 
-  refs.loadMore.style.display = 'block';
-
-  if (preValueInput === inputValue) {
-    onLoadMorePictures();
-  }
   // Новый запрос
   pageNow = 1;
   fetchImage(inputValue, pageNow)
     .then(fetchData => {
       const { hits: arr, totalHits } = fetchData.data;
-      console.log(fetchData);
 
       if (arr.length === 0) {
         Notiflix.Notify.failure(
@@ -52,7 +53,7 @@ function onSearch(e) {
       refs.gallery.innerHTML = createMarkup(arr);
       gallery.refresh();
       preValueInput = inputValue;
-      refs.loadMore.style.display = 'block';
+      observer.observe(guard);
     })
     .catch(e => console.log(e));
 }
@@ -108,4 +109,12 @@ function createMarkup(arr) {
       </div>`;
     })
     .join('');
+}
+
+function onLoad(entries, observer) {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      onLoadMorePictures();
+    }
+  });
 }
